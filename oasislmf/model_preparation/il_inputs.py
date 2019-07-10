@@ -512,8 +512,10 @@ def get_il_input_items(
         dtypes = {t: 'uint8' for t in ['ded_code', 'ded_type', 'lim_code', 'lim_type']}
         il_inputs_df = set_dataframe_column_dtypes(il_inputs_df, dtypes)
 
-        # Calculate agg. TIVs - TIVs grouped by loc. ID and agg. ID within each level,
-        # and summed
+        # Group and sum TIVS for items by loc. ID and agg. ID, within each
+        # level, and store in a new ``agg_tiv`` column - this step is
+        # preparation for the next step which is to convert % TIV deductibles
+        # to TIV fractional amounts
         agg_tivs = pd.DataFrame(
             il_inputs_df.loc[:, ['level_id','loc_id','agg_id','tiv']].groupby(['level_id','loc_id','agg_id'])['tiv'].sum()
         ).reset_index()
@@ -764,7 +766,7 @@ def write_il_input_files(
     }
 
     this_module = sys.modules[__name__]
-    # Write the files
+    # Write the files serially
     for fn in il_input_files:
         getattr(this_module, 'write_{}_file'.format(fn))(il_inputs_df.copy(deep=True), il_input_files[fn], chunksize)
 
