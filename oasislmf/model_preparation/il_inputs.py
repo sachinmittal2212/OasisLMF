@@ -179,6 +179,7 @@ def get_il_input_items(
     policy_num = oed_hierarchy['polnum']['ProfileElementName'].lower()
     portfolio_num = oed_hierarchy['portnum']['ProfileElementName'].lower()
     cond_num = oed_hierarchy['condnum']['ProfileElementName'].lower()
+    cond_priority = oed_hierarchy['condpri']['ProfileElementName'].lower()
 
     # Get the FM terms profile (this is a simplfied view of the main grouped
     # profile, containing only information about the financial terms)
@@ -216,7 +217,7 @@ def get_il_input_items(
         **{t: 'str' for t in [acc_num, portfolio_num, policy_num]},
         **{t: 'float64' for t in term_cols_floats},
         **{t: 'uint8' for t in term_cols_ints},
-        **{t: 'uint16' for t in [cond_num]},
+        **{t: 'uint16' for t in [cond_num, cond_priority]},
         **{t: 'uint32' for t in ['layer_id']}
     }
 
@@ -249,7 +250,7 @@ def get_il_input_items(
     # the source columns for the financial terms present in the accounts file (the
     # file should contain all financial terms relating to the cond. all (# 6),
     # policy all (# 9) and policy layer (# 10) FM levels)
-    usecols = [acc_num, portfolio_num, policy_num, cond_num, 'layer_id', SOURCE_IDX['acc']] + term_cols
+    usecols = [acc_num, portfolio_num, policy_num, cond_num, cond_priority, 'layer_id', SOURCE_IDX['acc']] + term_cols
     accounts_df.drop([c for c in accounts_df.columns if c not in usecols], axis=1, inplace=True)
 
     try:
@@ -297,6 +298,17 @@ def get_il_input_items(
             drop_duplicates=True
         )
 
+        # Support for multiple special conditions in the FM means that the
+        # account file will have a cond. priority column with some items having
+        # cond. priorities attached to cond. numbers, but not not necessarily
+        # all. And the GUL inputs dataframe will not have any cond. priorities
+        # in its items as it is generated from the loc. and keys files, so this
+        # merge may produce nulls in certain rows in the cond. priority column,
+        # which have to be set to 0 (indicating a special numeric null value
+        # for items with no special conditions or cond. priorities)
+        il_inputs_df[cond_priority] = il_inputs_df[cond_priority].fillna(0)
+        il_inputs_df[cond_priority] = il_inputs_df[cond_priority].astype('uint16')
+
         # Mark the exposure dataframes for deletion
         del exposure_df
 
@@ -324,7 +336,7 @@ def get_il_input_items(
         # policy all (# 9), policy layer (# 10))
         usecols = (
             gul_inputs_df.columns.to_list() +
-            [policy_num, 'gul_input_id'] +
+            [policy_num, 'gul_input_id', cond_priority] +
             ([SOURCE_IDX['loc']] if SOURCE_IDX['loc'] in il_inputs_df else []) +
             ([SOURCE_IDX['acc']] if SOURCE_IDX['acc'] in il_inputs_df else []) +
             site_pd_and_site_all_term_cols +
@@ -401,6 +413,8 @@ def get_il_input_items(
 
         # Define a list of all supported OED coverage types in the exposure
         supp_cov_types = [v['id'] for v in SUPPORTED_COVERAGE_TYPES.values()]
+
+        import ipdb; ipdb.set_trace()
 
         # The main loop for processing the financial terms for the sub-layer
         # non-coverage levels - currently these are site pd (# 2), site all (# 3),

@@ -74,7 +74,12 @@
             "CondNum":  {
                 "src": "FM",
                 "field": "condnumber",
-                "name": "Cond num."
+                "name": "Cond. num."
+            },
+            "CondPriority": {
+                "src": "FM",
+                "field": "condpriority",
+                "name": "Cond. priority"
             }
         }
     },

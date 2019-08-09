@@ -19,6 +19,11 @@
         "OEDHierarchy": "SpecialCondition",
         "Key": "CondNum"
     },
+    "CondPriority": {
+        "ProfileElementName": "CondPriority",
+        "OEDHierarchy": "SpecialCondition",
+        "Key": "CondPri"
+    },
     "CondDed6All": {
         "ProfileElementName": "CondDed6All",
         "DeductibleType": "B",
