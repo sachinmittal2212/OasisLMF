@@ -1,4 +1,5 @@
 __all__ = [
+    'get_aggregation_key',
     'get_fm_terms_oed_columns',
     'get_grouped_fm_profile_by_level',
     'get_grouped_fm_profile_by_level_and_term_group',
@@ -11,8 +12,9 @@ from collections import OrderedDict
 from itertools import groupby
 
 from .defaults import (
-    get_default_exposure_profile,
     get_default_accounts_profile,
+    get_default_exposure_profile,
+    get_default_fm_aggregation_profile,
 )
 from .fm import (
     SUPPORTED_FM_LEVELS,
@@ -87,6 +89,11 @@ def get_grouped_fm_terms_by_level_and_term_group(
             }) for tgid in grouped[level_id]
         }) for level_id in sorted(grouped)
     })
+
+
+def get_aggregation_key(aggregation_profile=get_default_fm_aggregation_profile(), level_id):
+    fmap = aggregation_profile
+    return [v['field'].lower() for v in fmap[level_id]['FMAggKey'].values()]
 
 
 def get_fm_terms_oed_columns(
