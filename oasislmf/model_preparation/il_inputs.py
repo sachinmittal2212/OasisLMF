@@ -46,6 +46,7 @@ from ..utils.fm import (
 from ..utils.log import oasis_log
 from ..utils.path import as_path
 from ..utils.profiles import (
+    get_aggregation_key,
     get_fm_terms_oed_columns,
     get_grouped_fm_profile_by_level_and_term_group,
     get_grouped_fm_terms_by_level_and_term_group,
@@ -441,7 +442,7 @@ def get_il_input_items(
             level_df = il_inputs_df[il_inputs_df['level_id'] == cov_level_id].drop_duplicates()
             level_df['level_id'] = level_id
 
-            agg_key = [v['field'].lower() for v in fmap[level_id]['FMAggKey'].values()]
+            agg_key = get_aggregation_key(level_id=level_id)
             level_df['agg_id'] = factorize_ndarray(level_df.loc[:, agg_key].values, col_idxs=range(len(agg_key)))[0]
 
             if level == 'cond all':
@@ -495,7 +496,7 @@ def get_il_input_items(
 
         # Set the layer level, layer IDs and agg. IDs
         layer_df['level_id'] = layer_level_id
-        agg_key = [v['field'].lower() for v in fmap[layer_level_id]['FMAggKey'].values()]
+        agg_key = get_aggregation_key(level_id=layer_level_id)
         layer_df['agg_id'] = factorize_ndarray(layer_df.loc[:, agg_key].values, col_idxs=range(len(agg_key)))[0]
 
         # The layer level financial terms
