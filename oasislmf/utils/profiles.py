@@ -91,7 +91,7 @@ def get_grouped_fm_terms_by_level_and_term_group(
     })
 
 
-def get_aggregation_key(aggregation_profile=get_default_fm_aggregation_profile(), level_id):
+def get_aggregation_key(level_id, aggregation_profile=get_default_fm_aggregation_profile()):
     fmap = aggregation_profile
     return [v['field'].lower() for v in fmap[level_id]['FMAggKey'].values()]
 

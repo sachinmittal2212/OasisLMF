@@ -443,12 +443,13 @@ def get_il_input_items(
             level_df['level_id'] = level_id
 
             agg_key = get_aggregation_key(level_id=level_id)
-            level_df['agg_id'] = factorize_ndarray(level_df.loc[:, agg_key].values, col_idxs=range(len(agg_key)))[0]
 
-            if level == 'cond all':
+            if level != 'cond all':
+                level_df['agg_id'] = factorize_ndarray(level_df.loc[:, agg_key].values, col_idxs=range(len(agg_key)))[0]
+                level_df.loc[:, level_term_cols] = level_df.loc[:, level_term_cols].fillna(method='ffill')
                 level_df.loc[:, level_term_cols] = level_df.loc[:, level_term_cols].fillna(0)
             else:
-                level_df.loc[:, level_term_cols] = level_df.loc[:, level_term_cols].fillna(method='ffill')
+                level_df['agg_id'] = get_ids(level_df, agg_key, group_by=[cond_priority])
                 level_df.loc[:, level_term_cols] = level_df.loc[:, level_term_cols].fillna(0)
 
             level_df.loc[:, level_terms] = level_df.loc[:, level_term_cols].values
