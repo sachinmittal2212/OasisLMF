@@ -103,67 +103,28 @@ After adding packages to either `*.in` file:
 
 should be ran ensuring the development dependencies are kept up to date.
 
-## Testing
+## Performance & Runtime Requirements
 
-To test the code style run:
+## Developer Notes
 
-    flake8
+### Linting & Testing
 
-To test against all supported python versions run:
+Flake8 is used for linting the code (errors E501 and E402 ignored):
+
+    flake8 oasislmf/ --ignore=E501,E402
+
+To test the entire test suite you can use either `tox`:
 
     tox
 
-To test against your currently installed version of python run:
+or `pytest`:
 
-    py.test
+    py.test | pytest
 
-To run the full test suite run:
+To run the Dockerised version of the test suite you can run the `runtests.sh` shell script:
 
     ./runtests.sh
 
-## Publishing
-
-Before publishing the latest version of the package make you sure increment the `__version__` value in `oasislmf/__init__.py`, and commit the change. You'll also need to install the `twine` Python package which `setuptools` uses for publishing packages on PyPI. If publishing wheels then you'll also need to install the `wheel` Python package.
-
-### Using the `publish` subcommand in `setup.py`
-
-The distribution format can be either a source distribution or a platform-specific wheel. To publish the source distribution package run:
-
-    python setup.py publish --sdist
-
-or to publish the platform specific wheel run:
-
-    python setup.py publish --wheel
-
-### Creating a bdist for another platform 
-
-To create a distribution for a non-host platform use the `--plat-name` flag:
-
-     python setup.py bdist_wheel --plat-name Linux_x86_64
-
-     or
-
-     python setup.py bdist_wheel --plat-name Darwin_x86_64
-
-
-### Manually publishing, with a GPG signature
-
-The first step is to create the distribution package with the desired format: for the source distribution run:
-
-    python setup.py sdist
-
-which will create a `.tar.gz` file in the `dist` subfolder, or for the platform specific wheel run:
-
-    python setup.py bdist_wheel
-
-which will create `.whl` file in the `dist` subfolder. To attach a GPG signature using your default private key you can then run:
-
-    gpg --detach-sign -a dist/<package file name>.{tar.gz,whl}
-
-This will create `.asc` signature file named `<package file name>.{tar.gz,whl}.asc` in `dist`. You can just publish the package with the signature using:
-
-    twine upload dist/<package file name>.{tar.gz,whl} dist/<package file name>.{tar.gz,whl}.asc
-    
 ## Documentation
 * <a href="https://github.com/OasisLMF/OasisLMF/issues">Issues</a>
 * <a href="https://github.com/OasisLMF/OasisLMF/releases">Releases</a>
