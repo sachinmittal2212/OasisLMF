@@ -24,6 +24,7 @@ import numpy as np
 from ..utils.calc_rules import get_calc_rules
 from ..utils.coverages import SUPPORTED_COVERAGE_TYPES
 from ..utils.data import (
+    factorize_array,
     factorize_ndarray,
     fast_zip_arrays,
     get_dataframe,
@@ -179,6 +180,9 @@ def get_il_input_items(
     acc_num = oed_hierarchy['accnum']['ProfileElementName'].lower()
     policy_num = oed_hierarchy['polnum']['ProfileElementName'].lower()
     portfolio_num = oed_hierarchy['portnum']['ProfileElementName'].lower()
+    loc_num = oed_hierarchy['locnum']['ProfileElementName'].lower()
+    locperilid = oed_hierarchy['locperilid']['ProfileElementName'].lower()
+    locperilscovid = oed_hierarchy['locperilscovid']['ProfileElementName'].lower()
     cond_num = oed_hierarchy['condnum']['ProfileElementName'].lower()
     cond_priority = oed_hierarchy['condpri']['ProfileElementName'].lower()
 
@@ -218,8 +222,7 @@ def get_il_input_items(
         **{t: 'str' for t in [acc_num, portfolio_num, policy_num]},
         **{t: 'float64' for t in term_cols_floats},
         **{t: 'uint8' for t in term_cols_ints},
-        **{t: 'uint16' for t in [cond_num, cond_priority]},
-        **{t: 'uint32' for t in ['layer_id']}
+        **{t: 'uint32' for t in [cond_num, cond_priority, 'layer_id']}
     }
 
     # Get the accounts frame either directly or from a file path if provided
@@ -308,7 +311,7 @@ def get_il_input_items(
         # which have to be set to 0 (indicating a special numeric null value
         # for items with no special conditions or cond. priorities)
         il_inputs_df[cond_priority] = il_inputs_df[cond_priority].fillna(0)
-        il_inputs_df[cond_priority] = il_inputs_df[cond_priority].astype('uint16')
+        il_inputs_df[cond_priority] = il_inputs_df[cond_priority].astype('uint32')
 
         # Mark the exposure dataframes for deletion
         del exposure_df
@@ -435,6 +438,7 @@ def get_il_input_items(
         # Finally, the processed level dataframe is concatenated with the
         # main IL inputs dataframe, with the financial terms OED columns for
         # level removed
+        import ipdb; ipdb.set_trace()
         for level in intermediate_fm_levels:
             level_id = SUPPORTED_FM_LEVELS[level]['id']
             level_terms = [t for t in terms if fm_terms[level_id][1].get(t)]
@@ -449,6 +453,19 @@ def get_il_input_items(
                 level_df.loc[:, level_term_cols] = level_df.loc[:, level_term_cols].fillna(method='ffill')
                 level_df.loc[:, level_term_cols] = level_df.loc[:, level_term_cols].fillna(0)
             else:
+                level_df = level_df.drop_duplicates(
+                    subset=['loc_id', locperilid, locperilscovid, cond_num, cond_priority]
+                ).assign(
+                    cond_level=1,
+                    agg_id=-1
+                ).reset_index(drop=True)
+                cond_hierarchy_levels = max(get_ids(level_df, ['loc_id', locperilid, locperilscovid, cond_num], group_by=['loc_id', locperilid, locperilscovid]))
+                level_df['cond_priority_idx'] = factorize_ndarray(level_df.loc[:, ['cond_level', cond_priority]].values, col_idxs=range(2))[0]
+                level_df = pd.concat(
+                    [
+                        level_df[(level_df['cond_priority_idx'] == i + 1) | (level_df[cond_num] == 0)].assign(cond_level=i + 1, agg_id=-1) for i in range(cond_hierarchy_levels)
+                    ]
+                ).reset_index(drop=True)
                 level_df['agg_id'] = get_ids(level_df, agg_key, group_by=[cond_priority])
                 level_df.loc[:, level_term_cols] = level_df.loc[:, level_term_cols].fillna(0)
 
@@ -566,8 +583,7 @@ def get_il_input_items(
         # Final setting of data types before returning the IL input items
         dtypes = {
             **{t: 'float64' for t in ['tiv', 'agg_tiv', 'deductible', 'deductible_min', 'deductible_max', 'limit', 'attachment', 'share']},
-            **{t: 'uint32' for t in ['agg_id', 'item_id', 'layer_id', 'level_id', 'orig_level_id', 'calcrule_id', 'policytc_id']},
-            **{t: 'uint16' for t in [cond_num]},
+            **{t: 'uint32' for t in ['agg_id', 'item_id', 'layer_id', 'level_id', 'orig_level_id', 'calcrule_id', 'policytc_id', cond_num, cond_priority]},
             **{t: 'uint8' for t in ['ded_code', 'ded_type', 'lim_code', 'lim_type']}
         }
         il_inputs_df = set_dataframe_column_dtypes(il_inputs_df, dtypes)

@@ -94,6 +94,8 @@ def get_gul_input_items(
     loc_num = oed_hierarchy['locnum']['ProfileElementName'].lower()
     acc_num = oed_hierarchy['accnum']['ProfileElementName'].lower()
     portfolio_num = oed_hierarchy['portnum']['ProfileElementName'].lower()
+    locperilid = oed_hierarchy['locperilid']['ProfileElementName'].lower()
+    locperilscovid = oed_hierarchy['locperilscovid']['ProfileElementName'].lower()
     cond_num = oed_hierarchy['condnum']['ProfileElementName'].lower()
 
     # The (site) coverage FM level ID (# 1 in the OED FM levels hierarchy)
@@ -142,9 +144,8 @@ def get_gul_input_items(
     dtypes = {
         **{t: 'float64' for t in tiv_cols + term_cols_floats},
         **{t: 'uint8' for t in term_cols_ints},
-        **{t: 'uint16' for t in [cond_num]},
-        **{t: 'str' for t in [loc_num, portfolio_num, acc_num]},
-        **{t: 'uint32' for t in ['loc_id']}
+        **{t: 'str' for t in [loc_num, portfolio_num, acc_num, locperilid, locperilscovid]},
+        **{t: 'uint32' for t in ['loc_id', cond_num]}
     }
     # Load the exposure and keys dataframes - set 64-bit float data types
     # for all real number columns - and in the keys frame rename some columns
@@ -300,6 +301,7 @@ def get_gul_input_items(
         usecols = (
             ['loc_id', loc_num, acc_num, portfolio_num, cond_num] +
             ['tiv'] + terms +
+            [locperilid, locperilscovid] +
             ['peril_id', 'coverage_type_id', 'areaperil_id', 'vulnerability_id'] +
             (['model_data'] if 'model_data' in gul_inputs_df else []) +
             ([SOURCE_IDX['loc']] if SOURCE_IDX['loc'] in gul_inputs_df else []) +
