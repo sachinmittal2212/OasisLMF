@@ -363,6 +363,7 @@ def get_il_input_items(
         # including the calcrule ID and policy TC ID
         il_inputs_df = il_inputs_df.assign(
             level_id=cov_level_id,
+            cond_level=cov_level_id,
             attachment=0.0,
             share=0.0,
             calcrule_id=0,
@@ -372,7 +373,7 @@ def get_il_input_items(
         # Set data types for the newer columns just added
         dtypes = {
             **{t: 'float64' for t in ['attachment', 'share']},
-            **{t: 'uint32' for t in ['level_id', 'calcrule_id', 'policytc_id']}
+            **{t: 'uint32' for t in ['level_id', 'cond_level', 'calcrule_id', 'policytc_id']}
         }
         il_inputs_df = set_dataframe_column_dtypes(il_inputs_df, dtypes)
 
@@ -442,6 +443,7 @@ def get_il_input_items(
             level_term_cols = get_fm_terms_oed_columns(fm_terms, level_ids=[level_id], terms=terms)
             level_df = il_inputs_df[il_inputs_df['level_id'] == cov_level_id].drop_duplicates()
             level_df['level_id'] = level_id
+            level_df['cond_level'] = level_id
 
             agg_key = get_aggregation_key(level_id=level_id)
 
@@ -523,6 +525,7 @@ def get_il_input_items(
 
         # Set the layer level, layer IDs and agg. IDs
         layer_df['level_id'] = layer_level_id
+        layer_df['cond_level'] = layer_level_id
         agg_key = get_aggregation_key(level_id=layer_level_id)
         layer_df['agg_id'] = factorize_ndarray(layer_df.loc[:, agg_key].values, col_idxs=range(len(agg_key)))[0]
 
@@ -548,8 +551,9 @@ def get_il_input_items(
         # Resequence the level IDs and item IDs, but also store the "original"
         # FM level IDs (before the resequencing)
         il_inputs_df['orig_level_id'] = il_inputs_df['level_id']
-        il_inputs_df['level_id'] = factorize_ndarray(il_inputs_df.loc[:, ['level_id']].values, col_idxs=[0])[0]
+        il_inputs_df['level_id'] = factorize_ndarray(il_inputs_df.loc[:, ['level_id', 'cond_level']].values, col_idxs=[0, 1])[0]
         il_inputs_df['item_id'] = il_inputs_df.index + 1
+        import ipdb; ipdb.set_trace()
 
         # Set datatypes again for the deductible code and type columns, as
         # they may have changed since the processing of the intermediate level
