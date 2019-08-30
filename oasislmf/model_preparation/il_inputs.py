@@ -215,7 +215,7 @@ def get_il_input_items(
     defaults = {
         **{t: 0.0 for t in term_cols_floats},
         **{t: 0 for t in term_cols_ints},
-        **{cond_num: 0},
+        **{t: 0 for t in [cond_num, cond_priority]},
         **{portfolio_num: '1'}
     }
     dtypes = {
@@ -418,8 +418,6 @@ def get_il_input_items(
         # Define a list of all supported OED coverage types in the exposure
         supp_cov_types = [v['id'] for v in SUPPORTED_COVERAGE_TYPES.values()]
 
-        import ipdb; ipdb.set_trace()
-
         # The main loop for processing the financial terms for the sub-layer
         # non-coverage levels - currently these are site pd (# 2), site all (# 3),
         # cond. all (# 6), policy all (# 9).
@@ -438,7 +436,6 @@ def get_il_input_items(
         # Finally, the processed level dataframe is concatenated with the
         # main IL inputs dataframe, with the financial terms OED columns for
         # level removed
-        import ipdb; ipdb.set_trace()
         for level in intermediate_fm_levels:
             level_id = SUPPORTED_FM_LEVELS[level]['id']
             level_terms = [t for t in terms if fm_terms[level_id][1].get(t)]
@@ -457,16 +454,28 @@ def get_il_input_items(
                     subset=['loc_id', locperilid, locperilscovid, cond_num, cond_priority]
                 ).assign(
                     cond_level=1,
-                    agg_id=-1
                 ).reset_index(drop=True)
+                level_df['cond_priority_idx'] = factorize_ndarray(level_df.loc[:, ['cond_level', cond_num]].values, col_idxs=range(2))[0]
+                level_df['agg_id'] = get_ids(level_df, ['cond_level', 'cond_priority_idx'])
                 cond_hierarchy_levels = max(get_ids(level_df, ['loc_id', locperilid, locperilscovid, cond_num], group_by=['loc_id', locperilid, locperilscovid]))
-                level_df['cond_priority_idx'] = factorize_ndarray(level_df.loc[:, ['cond_level', cond_priority]].values, col_idxs=range(2))[0]
-                level_df = pd.concat(
-                    [
-                        level_df[(level_df['cond_priority_idx'] == i + 1) | (level_df[cond_num] == 0)].assign(cond_level=i + 1, agg_id=-1) for i in range(cond_hierarchy_levels)
-                    ]
-                ).reset_index(drop=True)
-                level_df['agg_id'] = get_ids(level_df, agg_key, group_by=[cond_priority])
+                if cond_hierarchy_levels == 1:
+                    level_df = level_df.drop_duplicates(subset=['loc_id', locperilid, locperilscovid])
+                else:
+                    level_df = pd.concat(
+                        [level_df.drop_duplicates(subset=['loc_id', locperilid, locperilscovid])] +
+                        [
+                            level_df.assign(
+                                condnumber=level_df.where(level_df[cond_num].isin([0, i]), i)[cond_num].values,
+                                cond_level=i,
+                                agg_id=-1
+                            ).drop_duplicates(
+                                subset=['loc_id', locperilid, locperilscovid]
+                            )
+                            for i in range(2, cond_hierarchy_levels + 1)
+                        ]
+                    ).reset_index(drop=True)
+                    level_df.loc[level_df[level_df['cond_level'] > 1].index, ['cond_priority_idx']] = factorize_ndarray(level_df[level_df['cond_level'] > 1].loc[:, ['cond_level', cond_num]].values, col_idxs=range(2))[0]
+                    level_df.loc[level_df[level_df['cond_level'] > 1].index, ['agg_id']] = get_ids(level_df[level_df['cond_level'] > 1], ['cond_level', 'cond_priority_idx'])
                 level_df.loc[:, level_term_cols] = level_df.loc[:, level_term_cols].fillna(0)
 
             level_df.loc[:, level_terms] = level_df.loc[:, level_term_cols].values

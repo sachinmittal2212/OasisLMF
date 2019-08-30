@@ -54,6 +54,10 @@ class FmAcceptanceTests(TestCase):
     def test_fm41(self):
         self.run_test('fm41')
 
+    @pytest.mark.skip(reason='Needs expected set of files to be completed')
+    def test_fm50(self):
+        self.run_test('fm50')
+
     def test_CX29_03(self):
         self.run_test('CX29_03')
 
