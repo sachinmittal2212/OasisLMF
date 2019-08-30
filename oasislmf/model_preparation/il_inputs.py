@@ -592,7 +592,7 @@ def get_il_input_items(
         # Final setting of data types before returning the IL input items
         dtypes = {
             **{t: 'float64' for t in ['tiv', 'agg_tiv', 'deductible', 'deductible_min', 'deductible_max', 'limit', 'attachment', 'share']},
-            **{t: 'uint32' for t in ['agg_id', 'item_id', 'layer_id', 'level_id', 'orig_level_id', 'calcrule_id', 'policytc_id', cond_num, cond_priority, 'cond_level', 'cond_priority_idx']},
+            **{t: 'uint32' for t in ['agg_id', 'item_id', 'layer_id', 'level_id', 'orig_level_id', 'calcrule_id', 'policytc_id', cond_num, cond_priority]},
             **{t: 'uint8' for t in ['ded_code', 'ded_type', 'lim_code', 'lim_type']}
         }
         il_inputs_df = set_dataframe_column_dtypes(il_inputs_df, dtypes)
