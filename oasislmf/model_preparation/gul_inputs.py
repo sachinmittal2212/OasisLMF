@@ -136,6 +136,7 @@ def get_gul_input_items(
     # Set defaults and data types for the TIV and cov. level IL columns as
     # as well as the portfolio num. and cond. num. columns
     defaults = {
+        **{locperilid: 'AA1'},
         **{t: 0.0 for t in tiv_cols + term_cols_floats},
         **{t: 0 for t in term_cols_ints},
         **{cond_num: 0},
