@@ -652,6 +652,8 @@ class OasisLookupFactory(object):
         results = pool.map(lookup.process_locations_multiproc, locations)
         pool.close()
         pool.join()
+        pool.terminate()
+
         return sum([r for r in results if r], [])
 
     @classmethod

@@ -57,6 +57,7 @@ from .utils.data import (
     get_utctimestamp,
 )
 from .utils.exceptions import OasisException
+from .utils.garbage import force_gc_collect
 from .utils.log import oasis_log
 from .utils.defaults import (
     get_default_accounts_profile,
@@ -202,6 +203,7 @@ class OasisManager(object):
             return alloc_given
 
     @oasis_log
+    @force_gc_collect
     def generate_peril_areas_rtree_file_index(
         self,
         keys_data_fp,
@@ -303,6 +305,7 @@ class OasisManager(object):
         )
 
     @oasis_log
+    @force_gc_collect
     def generate_keys(
         self,
         exposure_fp,
@@ -371,6 +374,7 @@ class OasisManager(object):
         )
 
     @oasis_log
+    @force_gc_collect
     def generate_oasis_files(
         self,
         target_dir,
@@ -615,6 +619,7 @@ class OasisManager(object):
         return oasis_files
 
     @oasis_log
+    @force_gc_collect
     def generate_model_losses(
         self,
         model_run_fp,
